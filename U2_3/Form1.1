@@ -1,0 +1,188 @@
+using System.Data.Common;
+using System.Drawing.Imaging;
+using System.Windows.Forms;
+
+namespace U2_3
+{
+    public partial class Form1 : Form
+    {
+
+        Graphics papel;
+        Pen pen;
+        int anchoPluma;
+        int x = 0, y = 0;
+        bool moving;
+        int R = 0;
+        int G = 0;
+        int B = 0;
+        bool pintar = false;
+        bool borrar = false;
+
+        public Form1()
+        {
+            InitializeComponent();
+            //Asignamos nuestra propiedad Graphics a nuestro picturebox
+            papel = pictureBoxPapel.CreateGraphics();
+            //Cuando dibuje suaviza el trazo
+            papel.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            //Iniciamos nuestra variable con el valor del trackbar
+            anchoPluma = trackBar1.Value;
+            //Inicializando nuestro RGB con los valores del textBox
+            R = int.Parse(txtR.Text);
+            G = int.Parse(txtG.Text);
+            B = int.Parse(txtB.Text);
+            //Inicializamos un picel con los colores y el tamaño del pincel
+            pen = new Pen(Color.FromArgb(R, G, B), anchoPluma);
+            //Los trazos inicien y terminen en forma ovalada
+            pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
+
+        }
+        //Evento que ocurre al hacer clic al boton pintar
+        private void btnPintar_Click(object sender, EventArgs e)
+        {
+            pintar = true;
+            borrar = false;
+        }
+
+        //Evento que se dispara al hacer clic y sostenerlo en el picture Box
+        private void pictureBoxPapel_MouseDown(object sender, MouseEventArgs e)
+        {
+            moving= true;
+            x = e.X;
+            y = e.Y;
+            pictureBoxPapel.Cursor = Cursors.Cross;
+        }
+
+        private void pictureBoxPapel_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(moving && pintar)
+            {
+                //Se llama la funcion para cambiar las propiedades del pincel
+                cambiarValoresPluma(int.Parse(txtR.Text), int.Parse(txtG.Text), int.Parse(txtB.Text));
+                //Empezamos a Dibujar Lineas de la posicion actual de nuestro cursor hacia donde nos movemos
+                papel.DrawLine(pen, new Point(x, y), e.Location);
+                x = e.X; y = e.Y;
+
+            }
+            if (moving && borrar)
+            {
+                cambiarValoresPluma(255, 255, 255);
+                papel.DrawLine(pen, new Point(x, y), e.Location);
+                x = e.X; y = e.Y;
+
+            }
+        }
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            anchoPluma = trackBar1.Value;
+            lblTB.Text = trackBar1.Value.ToString();
+        }
+
+        private void txtR_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
+        {
+            moving = false;
+        }
+
+        private void btnGuardar_Click(object sender, EventArgs e)
+        {
+            //Image Imagen = pictureBoxPapel.Image;
+            //Bitmap bitmap = new Bitmap(Imagen);
+            //bitmap.Save("C:\\Users\\Dell\\OneDrive\\Desktop\\Sistemas_Computacionales\\6to_Semestre\\Software\\IMAGEN\\nombrearchivo.jpg", ImageFormat.Jpeg);
+            /*MemoryStream ms = new MemoryStream(); //Conversion de Imagen a Bytes
+            pictureBoxPapel.Image.Save(ms, ImageFormat.Jpeg); //Cargando un Paquete que permita guardar Jpeg
+            byte[] aByte = ms.ToArray();//Convertir Imagen a Bytes*/
+
+            /*SaveFileDialog Guardar = new SaveFileDialog();
+            Guardar.Filter = "JPEG(*.JPG)|*.JPG|BMP(*.BMP)|*.BMP";
+            if(Guardar.ShowDialog() = System.Windows.Forms.DialogResult.OK)
+            {
+                Image Imagen = pictureBoxPapel.BackgroundImage;
+                Imagen.Save(Guardar.FileName);
+
+            }*/
+            /*SaveFileDialog Guardar = new SaveFileDialog();
+            Guardar.Filter = "JPEG(*.JPG)|*.JPG|BMP(*.BMP)|*.BMP";
+            Image Imagen = pictureBoxPapel.BackgroundImage;
+            Guardar.ShowDialog();
+
+            Imagen.Save(Guardar.FileName);*/
+
+            // Crear un objeto SaveFileDialog para seleccionar la ubicación de la imagen guardada
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Archivos de imagen (*.bmp, *.jpg, *.png)|*.bmp;*.jpg;*.png";
+            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            saveFileDialog.Title = "Guardar Imagen";
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                // Guardar la imagen en la ubicación seleccionada
+                pictureBoxPapel.Image.Save(saveFileDialog.FileName);
+            }
+
+        }
+
+        private void btnSeleccionar_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofdSeleccionar = new OpenFileDialog();
+            ofdSeleccionar.Filter = "Imagenes|*.jpg; *.png";
+            ofdSeleccionar.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            ofdSeleccionar.Title = "Seleccionar Imagen";
+
+            if (ofdSeleccionar.ShowDialog() == DialogResult.OK) 
+            {
+                pictureBoxPapel.Image = Image.FromFile(ofdSeleccionar.FileName);
+            }
+        }
+
+        private void btnBorrar_Click(object sender, EventArgs e)
+        {
+            pictureBoxPapel.Image = null;
+        }
+
+        
+        //Picture Box para pasar a color negro nuestra brocha
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            txtR.Text = txtG.Text = txtB.Text = 0.ToString();
+        }
+
+        //PictueBox que muestra el color Dialog
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            //Mostramos el Color Dialog
+            if(colorDialog1.ShowDialog() == DialogResult.OK)
+            {
+                //Asignar a los TextBox el Color Seleccionado
+                txtR.Text = colorDialog1.Color.R.ToString();
+                txtG.Text = colorDialog1.Color.G.ToString();
+                txtB.Text = colorDialog1.Color.B.ToString();
+            }
+        }
+
+        private void pictureBoxPapel_Click(object sender, EventArgs e)
+        {
+            moving = false;
+        }
+
+        private void BtnBorrador_Click(object sender, EventArgs e)
+        {
+            pintar = false;
+            borrar = true;
+        }
+
+        private void cambiarValoresPluma(int R, int G, int B)
+        {
+            pen = new Pen(Color.FromArgb(R, G, B), anchoPluma);
+            pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
+    }
+    }
+    //TODO: Pasar las figuras a este programa
+    //* Plus: Dibujar un cuadrado por dos puntos
+    //** Plus: Dibujar un cuadradi por dos puntos y que se vea como se va generando
+    //TODO: Boton para Guardar el dibujo
+}
